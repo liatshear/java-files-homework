@@ -13,31 +13,10 @@ import java.util.List;
  */
 public class Smarticulous {
     //Data base version
-    private static final int DATABASE_VERSION = 1;
+    //private static final int DATABASE_VERSION = 1;
     //data base Name
-    private static final String DATABASE_NAME = "UserManager.db";
-    //User table name
-    private static final String TABLE_USER = "User";
+    //private static final String DATABASE_NAME = "UserManager.db";
 
-
-    // user table column names
-    private static final int COLUMN_USER_ID = "UserId";
-    private static final String COLUMN_USER_NAME = "Username";
-    private static final String COLUMN_FIRST_NAME = "Firstname";
-    private static final String COLUMN_LAST_NAME = "Lastname";
-    private static final String COLUMN_USER_PASSWORD = "Password";
-
-    //Exercise table column names
-    private static final int COLUMN_EXERCISE_ID = "ExerciseId";
-    private static final String COLUMN_NAME = "Name";
-    private static final int COLUMN_DUE_DATE = "DueDate";
-
-    //Question table column names
-    private static final int COLUMNQ_EXCERCISE_ID = "ExerciseId";
-    private static final int COLUMNQ_QUESTION_ID = "QuestionId";
-    private static final String COLUMNQ_NAME = "Name";
-    private static final String COLUMNQ_DESC = "Desc";
-    private static final int COLUMNQ_POINTS = "Points";
 
 
 
@@ -165,7 +144,6 @@ public class Smarticulous {
         + ");";
         return null;
     }
-
 
     /**
      * Close the DB if it is open.
