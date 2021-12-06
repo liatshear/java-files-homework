@@ -178,7 +178,7 @@ public class Smarticulous {
         db.insert(user, null, values);
         db.close();
         return -1;
-    }*//
+    }*/
 
 
     /**
