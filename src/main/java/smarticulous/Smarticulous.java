@@ -12,6 +12,34 @@ import java.util.List;
  * The Smarticulous class, implementing a grading system.
  */
 public class Smarticulous {
+    //Data base version
+    private static final int DATABASE_VERSION = 1;
+    //data base Name
+    private static final String DATABASE_NAME = "UserManager.db";
+    //User table name
+    private static final String TABLE_USER = "User";
+
+
+    // user table column names
+    private static final int COLUMN_USER_ID = "UserId";
+    private static final String COLUMN_USER_NAME = "Username";
+    private static final String COLUMN_FIRST_NAME = "Firstname";
+    private static final String COLUMN_LAST_NAME = "Lastname";
+    private static final String COLUMN_USER_PASSWORD = "Password";
+
+    //Exercise table column names
+    private static final int COLUMN_EXERCISE_ID = "ExerciseId";
+    private static final String COLUMN_NAME = "Name";
+    private static final int COLUMN_DUE_DATE = "DueDate";
+
+    //Question table column names
+    private static final int COLUMNQ_EXCERCISE_ID = "ExerciseId";
+    private static final int COLUMNQ_QUESTION_ID = "QuestionId";
+    private static final String COLUMNQ_NAME = "Name";
+    private static final String COLUMNQ_DESC = "Desc";
+    private static final int COLUMNQ_POINTS = "Points";
+
+
 
     /**
      * The connection to the underlying DB.
@@ -83,8 +111,60 @@ public class Smarticulous {
      * @return the new connection
      * @throws SQLException
      */
+
+    public static void createNewTable(){
+        String sql = "CREATE TABLE IF NOT EXISTS"
+    }
+    
     public Connection openDB(String dburl) throws SQLException {
-        // TODO: Implement
+        Connection conn = null;
+        String url = "jdbc:sqlite:C:/sqlite/" + dburl;
+        try{
+            conn = DriverManager.getConnection(url);
+        } catch (SQLException e){
+            System.out.println(e.getMessage());
+        } finally {
+            try{
+                if(conn != null){
+                    conn.close();
+                }
+            } catch (SQLException ex){
+                System.out.println(ex.getMessage());
+            }
+        }
+        String sql1 = "CREATE TABLE IF NOT EXISTS User (\n" 
+        + "UserId integer PRIMARY KEY,\n" 
+        + "Username text NOT NULL.\n" 
+        + "Firstname text,\n" 
+        + "Lastname text,\n"
+        + "Password text,\n" 
+        + ");";
+        String sql2 = "CREATE TABLE IF NOT EXISTS Exercise (\n" 
+        + "ExerciseId integer PRIMARY KEY,\n" 
+        + "Name text,\n" 
+        + "DueDate integer, \n" 
+        + ");";
+
+        String sql3 = "CREATE TABLE IF NOT EXISTS Question (\n" 
+        + "ExerciseId integer,\n" 
+        + "QuestionId integer,\n" 
+        + "Name text,\n" 
+        + "Desc text,\n"
+        + "Points integer,\n" 
+        + ");";
+
+        String sql4 = "CREATE TABLE IF NOT EXISTS Submission (\n" 
+        + "SubmissionId integer PRIMARY KEY, \n" 
+        + "UserId integer,\n" 
+        + "ExerciseId integer,\n" 
+        + "Password text,\n" 
+        + ");";
+
+        String sql5 = "CREATE TABLE IF NOT EXISTS QuestionGrade (\n" 
+        + "SubmissionId integer, \n" 
+        + "QuestionId integer,\n" 
+        + "Grade real,\n"  
+        + ");";
         return null;
     }
 
@@ -115,7 +195,12 @@ public class Smarticulous {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        // TODO: Implement
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_USER_NAME, user.getName());
+        values.put(COLUMN_USER_PASSWORD, password);
+        db.insert(TABLE_USER, null, values);
+        db.close();
         return -1;
     }
 
