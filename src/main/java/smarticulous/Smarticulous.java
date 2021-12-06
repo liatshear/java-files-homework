@@ -170,15 +170,15 @@ public class Smarticulous {
      * @return the userid.
      * @throws SQLException
      */
-    public int addOrUpdateUser(User user, String password) throws SQLException {
-        SQLiteDatabase db = this.getWritableDatabase();
+    /**public int addOrUpdateUser(User user, String password) throws SQLException {
+         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COLUMN_USER_NAME, user.getName());
-        values.put(COLUMN_USER_PASSWORD, password);
-        db.insert(TABLE_USER, null, values);
+        values.put(user, user.getName());
+        values.put(user, password);
+        db.insert(user, null, values);
         db.close();
         return -1;
-    }
+    }*//
 
 
     /**
