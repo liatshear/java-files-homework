@@ -112,9 +112,6 @@ public class Smarticulous {
      * @throws SQLException
      */
 
-    public static void createNewTable(){
-        String sql = "CREATE TABLE IF NOT EXISTS"
-    }
     
     public Connection openDB(String dburl) throws SQLException {
         Connection conn = null;
@@ -139,6 +136,7 @@ public class Smarticulous {
         + "Lastname text,\n"
         + "Password text,\n" 
         + ");";
+
         String sql2 = "CREATE TABLE IF NOT EXISTS Exercise (\n" 
         + "ExerciseId integer PRIMARY KEY,\n" 
         + "Name text,\n" 
