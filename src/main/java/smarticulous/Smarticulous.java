@@ -93,55 +93,44 @@ public class Smarticulous {
 
     
     public Connection openDB(String dburl) throws SQLException {
-        Connection conn = null;
+        Connection db = null;
+        Statement st = null;
         String url = "jdbc:sqlite:C:/sqlite/" + dburl;
         try{
-            conn = DriverManager.getConnection(url);
+            //get connection to dburl
+            db = DriverManager.getConnection(url);
+            //create table User
+            st = db.createStatement();
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Passwrod TEXT);");
+            st.close();
+            // create table Exercise
+            st = db.createStatement();
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, Name TEXT, DueDate INTEGER);");
+            st.close();
+            // create table Question
+            st = db.createStatement();
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS Question (ExerciseId INTEGER, QuestionId INTEGER, Name TEXT, Desc TEXT, Points INTEGER, PRIMARY KEY (ExerciseId, QuestionId));");
+            st.close();
+            // create table Submission
+            st = db.createStatement();
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS Submission (SubmissionId INTEGER PRIMARY KEY, UserId INTEGER, ExerciseId INTEGER, Password TEXT);");
+            st.close();
+            // create table QuestionGrade
+            st = db.createStatement();
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS QuestionGrade (SubmissionId INTEGER, QuestionId INTEGER, Grade REAL);");
+            st.close();
         } catch (SQLException e){
-            System.out.println(e.getMessage());
+            System.out.println(e);
         } finally {
             try{
-                if(conn != null){
-                    conn.close();
+                if(db != null){
+                    db.close();
                 }
             } catch (SQLException ex){
                 System.out.println(ex.getMessage());
             }
         }
-        String sql1 = "CREATE TABLE IF NOT EXISTS User (\n" 
-        + "UserId integer PRIMARY KEY,\n" 
-        + "Username text NOT NULL.\n" 
-        + "Firstname text,\n" 
-        + "Lastname text,\n"
-        + "Password text,\n" 
-        + ");";
-
-        String sql2 = "CREATE TABLE IF NOT EXISTS Exercise (\n" 
-        + "ExerciseId integer PRIMARY KEY,\n" 
-        + "Name text,\n" 
-        + "DueDate integer, \n" 
-        + ");";
-
-        String sql3 = "CREATE TABLE IF NOT EXISTS Question (\n" 
-        + "ExerciseId integer,\n" 
-        + "QuestionId integer,\n" 
-        + "Name text,\n" 
-        + "Desc text,\n"
-        + "Points integer,\n" 
-        + ");";
-
-        String sql4 = "CREATE TABLE IF NOT EXISTS Submission (\n" 
-        + "SubmissionId integer PRIMARY KEY, \n" 
-        + "UserId integer,\n" 
-        + "ExerciseId integer,\n" 
-        + "Password text,\n" 
-        + ");";
-
-        String sql5 = "CREATE TABLE IF NOT EXISTS QuestionGrade (\n" 
-        + "SubmissionId integer, \n" 
-        + "QuestionId integer,\n" 
-        + "Grade real,\n"  
-        + ");";
+      
         return null;
     }
 
