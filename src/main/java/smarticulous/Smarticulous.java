@@ -101,7 +101,7 @@ public class Smarticulous {
             db = DriverManager.getConnection(url);
             //create table User
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Passwrod TEXT);");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Password TEXT);");
             st.close();
             // create table Exercise
             st = db.createStatement();
@@ -159,15 +159,31 @@ public class Smarticulous {
      * @return the userid.
      * @throws SQLException
      */
-    /**public int addOrUpdateUser(User user, String password) throws SQLException {
-         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(user, user.getName());
-        values.put(user, password);
-        db.insert(user, null, values);
-        db.close();
-        return -1;
-    }*/
+    public int addOrUpdateUser(User user, String password) throws SQLException {
+        Statement st = null;
+        st = db.createStatement();
+        //check if there is a row in the table User with the same username
+        ResultSet rs = st.executeQuery("SELECT 1 FROM User where Username = user.username;"); 
+        st.close();
+        //if no results were returned, user does not exist and needs to be added
+        if (rs == null){
+            st = db.createStatement();
+            st.executeUpdate("INSERT INTO User(UserId, Username, Firstname, Lastname, Password) VALUES(user.userid, user.username, user.firstname, user.lastname, password);");
+            st.close();
+        }
+        // if there is a result, user exists and just needs to be updated
+        else{
+            st=db.createStatement();
+            st.executeUpdate("UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE User='user.name';");
+            st.close();
+        }
+        return 0;
+    }
+
+            
+
+        
+    }
 
 
     /**
