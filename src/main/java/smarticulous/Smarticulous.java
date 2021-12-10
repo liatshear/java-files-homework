@@ -6,12 +6,16 @@ import smarticulous.db.User;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
  * The Smarticulous class, implementing a grading system.
+ * @param <SQLiteDatabase>
+ * @param <Cursor>
  */
-public class Smarticulous {
+public class Smarticulous<SQLiteDatabase, Cursor> {
     //Data base version
     //private static final int DATABASE_VERSION = 1;
     //data base Name
@@ -105,7 +109,7 @@ public class Smarticulous {
             st.close();
             // create table Exercise
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, Name TEXT, DueDate INTEGER);");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, DueDate INTEGER);");
             st.close();
             // create table Question
             st = db.createStatement();
@@ -160,6 +164,7 @@ public class Smarticulous {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
+        db = openDB(db.getMetaData().getURL());
         Statement st = null;
         st = db.createStatement();
         //check if there is a row in the table User with the same username
@@ -173,16 +178,11 @@ public class Smarticulous {
         }
         // if there is a result, user exists and just needs to be updated
         else{
-            st=db.createStatement();
+            st = db.createStatement();
             st.executeUpdate("UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE User='user.name';");
             st.close();
         }
         return 0;
-    }
-
-            
-
-        
     }
 
 
@@ -199,8 +199,20 @@ public class Smarticulous {
      * @see <a href="https://crackstation.net/hashing-security.htm">How to Hash Passwords Properly</a>
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
-        // TODO: Implement
-        return false;
+        db = openDB(db.getMetaData().getURL());
+        Statement st = null;
+        boolean check = false;
+        st = db.createStatement();
+        //check if there is a row in the table User with the same username
+        ResultSet rs = st.executeQuery("SELECT * FROM User WHERE Username=username AND Password=password;"); 
+        st.close();
+        if(rs != null){
+            return true;
+        }
+        else{
+            check = false;
+        }
+        return check;
     }
 
     // =========== Exercise Management =============
@@ -213,8 +225,23 @@ public class Smarticulous {
      * @throws SQLException
      */
     public int addExercise(Exercise exercise) throws SQLException {
-        // TODO: Implement
-        return -1;
+        db = openDB(db.getMetaData().getURL());
+        Statement st = null;
+        st = db.createStatement();
+        //check if the exercise exists in the database using its id
+        ResultSet rs = st.executeQuery("SELECT 1 FROM Exercise where ExerciseId = exercise.id;"); 
+        st.close();
+        //if no results were returned, exercise does not exist and needs to be added
+        if (rs == null){
+            st = db.createStatement();
+            st.executeUpdate("INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);");
+            st.close();
+            return exercise.id; 
+        }
+        // if there is a result just return -1 if exercise already exists 
+        else{
+           return -1;
+        }
     }
 
 
@@ -222,13 +249,25 @@ public class Smarticulous {
      * Return a list of all the exercises in the database.
      * <p>
      * The list should be sorted by exercise id.
+     * @param <MyType>
      *
      * @return list of all exercises.
      * @throws SQLException
      */
-    public List<Exercise> loadExercises() throws SQLException {
-        // TODO: Implement
-        return null;
+    public <MyType> List<Exercise> loadExercises() throws SQLException {
+        db = openDB(db.getMetaData().getURL());
+        List<Exercise> returnList = new ArrayList<Exercise>();
+        Statement st = null;
+        st = db.createStatement();
+        ResultSet rs = st.executeQuery("SELECT * FROM Exercise ORDER BY ExerciseId;");
+        while(rs.next()){
+            int exId = rs.getInt("ExericseId");
+            String name = rs.getString("Name");
+            Date DueDate = rs.getDate("DueDate");
+            Exercise current = new Exercise(exId, name, DueDate);
+            returnList.add(current);
+        }
+        return returnList;
     }
 
     // ========== Submission Storage ===============
@@ -244,9 +283,18 @@ public class Smarticulous {
      * @throws SQLException
      */
     public int storeSubmission(Submission submission) throws SQLException {
-        // TODO: Implement
-        return -1;
+        db = openDB(db.getMetaData().getURL());
+        Statement st = db.createStatement();
+        //check if the user exists in the data base
+        ResultSet rs = st.executeQuery("SELECT * FROM User WHERE submission.userId=UserId;");
+        if(rs == null){
+            return -1;
+        }
+        else{
+        st.executeUpdate("INSERT INTO Submission(SubmissionId, UserId, ExerciseId, Password) VALUES(submission.id, submission.user, submission.exercise, submission.password);");
+        }
     }
+}
 
 
     // ============= Submission Query ===============
@@ -270,7 +318,8 @@ public class Smarticulous {
      * @return
      */
     PreparedStatement getLastSubmissionGradesStatement() throws SQLException {
-        // TODO: Implement
+        db = openDB(db.getMetaData().getURL());
+        
         return null;
     }
 
@@ -292,6 +341,7 @@ public class Smarticulous {
      *
      */
     PreparedStatement getBestSubmissionGradesStatement() throws SQLException {
+        db = openDB(db.getMetaData().getURL());
         // TODO: Implement
         return null;
     }
