@@ -176,7 +176,6 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             stmt.close();                
             return 1;
         }
-        return 0;
     }
 
 
@@ -235,7 +234,6 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             st.close();
             return -1;
         }
-        return 0;
     }
 
 
