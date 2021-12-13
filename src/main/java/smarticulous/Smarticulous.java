@@ -157,9 +157,9 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        String CheckUser = "SELECT 1 FROM User where Username = user.username";
-        String insertUser = "INSERT INTO User(UserId, Username, Firstname, Lastname, Password) VALUES(user.username, user.firstname, user.lastname, password)";
-        String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE User='user.name'";
+        String CheckUser = "SELECT 1 FROM User where username = user.username;";
+        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES (user.username, user.firstname, user.lastname, password);";
+        String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
         Statement stmt = db.createStatement();
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(CheckUser); 
