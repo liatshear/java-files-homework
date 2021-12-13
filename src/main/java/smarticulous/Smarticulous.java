@@ -158,25 +158,23 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        //db = openDB(db.getMetaData().getURL());
         String CheckUser = "SELECT 1 FROM User where Username = user.username";
         String insertUser = "INSERT INTO User(UserId, Username, Firstname, Lastname, Password) VALUES(user.username, user.firstname, user.lastname, password)";
         String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE User='user.name'";
-        try (Connection db = this.openDB();
-            Statement stmt = db.createStatement();
+        Statement stmt = db.createStatement();
         //check if there is a row in the table User with the same username
-            ResultSet rs = stmt.executeQuery(CheckUser); 
-
+        ResultSet rs = stmt.executeQuery(CheckUser); 
         //if no results were returned, user does not exist and needs to be added
-            if (rs == null){
-                Statement insertUs = db.createStatement();
-                insertUs.executeUpdate(insertUser);
-                st.close();
-            }
+        if (rs == null){
+            stmt.executeUpdate(insertUser);
+            stmt.close();
+            return 1;
+        }
         // if there is a result, user exists and just needs to be updated
-            else{
-            Statement updateUs = db.createStatement();
-            updateUs.executeUpdate(updateUser);
+        else{
+            stmt.executeUpdate(updateUser);
+            stmt.close();                
+            return 1;
         }
         return 0;
     }
@@ -195,19 +193,19 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @see <a href="https://crackstation.net/hashing-security.htm">How to Hash Passwords Properly</a>
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
-   
-        Statement st = null;
+        Statement stmt = db.createStatement();
         boolean check = false;
-        st = db.createStatement();
+        String checkUser = "SELECT * FROM User WHERE Username=username AND Password=password;";
         //check if there is a row in the table User with the same username
-        ResultSet rs = st.executeQuery("SELECT * FROM User WHERE Username=username AND Password=password;"); 
-        st.close();
+        ResultSet rs = stmt.executeQuery(checkUser); 
         if(rs != null){
+            stmt.close();
             return true;
         }
         else{
             check = false;
         }
+        stmt.close();
         return check;
     }
 
@@ -221,23 +219,23 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addExercise(Exercise exercise) throws SQLException {
-        db = openDB(db.getMetaData().getURL());
-        Statement st = null;
-        st = db.createStatement();
+        Statement st = db.createStatement();
+        String checkUser = "SELECT 1 FROM Exercise where ExerciseId = exercise.id;";
+        String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);";
         //check if the exercise exists in the database using its id
-        ResultSet rs = st.executeQuery("SELECT 1 FROM Exercise where ExerciseId = exercise.id;"); 
-        st.close();
+        ResultSet rs = st.executeQuery(checkUser); 
         //if no results were returned, exercise does not exist and needs to be added
         if (rs == null){
-            st = db.createStatement();
-            st.executeUpdate("INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);");
+            st.executeUpdate(insertInto);
             st.close();
             return exercise.id; 
         }
         // if there is a result just return -1 if exercise already exists 
         else{
-           return -1;
+            st.close();
+            return -1;
         }
+        return 0;
     }
 
 
@@ -251,11 +249,10 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public <MyType> List<Exercise> loadExercises() throws SQLException {
-        db = openDB(db.getMetaData().getURL());
         List<Exercise> returnList = new ArrayList<Exercise>();
-        Statement st = null;
-        st = db.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM Exercise ORDER BY ExerciseId;");
+        Statement st = db.createStatement();
+        String checkUser = "SELECT * FROM Exercise ORDER BY ExerciseId;";
+        ResultSet rs = st.executeQuery(checkUser);
         while(rs.next()){
             int exId = rs.getInt("ExericseId");
             String name = rs.getString("Name");
@@ -263,6 +260,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             Exercise current = new Exercise(exId, name, DueDate);
             returnList.add(current);
         }
+        st.close();
         return returnList;
     }
 
@@ -279,18 +277,21 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int storeSubmission(Submission submission) throws SQLException {
-        db = openDB(db.getMetaData().getURL());
         Statement st = db.createStatement();
+        String checkUser = "SELECT * FROM User WHERE submission.userId=UserId;"; 
+        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId, Password) VALUES(submission.id, submission.user, submission.exercise, submission.password);";
         //check if the user exists in the data base
-        ResultSet rs = st.executeQuery("SELECT * FROM User WHERE submission.userId=UserId;");
+        ResultSet rs = st.executeQuery(checkUser);
         if(rs == null){
+            st.close();
             return -1;
         }
         else{
-        st.executeUpdate("INSERT INTO Submission(SubmissionId, UserId, ExerciseId, Password) VALUES(submission.id, submission.user, submission.exercise, submission.password);");
+            st.executeUpdate(InsertSub);
+            st.close();
+            return 1;
         }
     }
-}
 
 
     // ============= Submission Query ===============
