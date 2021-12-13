@@ -193,7 +193,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public boolean verifyLogin(String username, String password) throws SQLException {
         Statement stmt = db.createStatement();
         boolean check = false;
-        String checkUser = "SELECT * FROM User WHERE Username=username AND Password=password;";
+        String checkUser = "SELECT EXISTS(SELECT * FROM User WHERE Username=username AND Password=password);";
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser); 
         if(rs != null){
@@ -218,7 +218,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
-        String checkUser = "SELECT 1 FROM Exercise where ExerciseId = exercise.id;";
+        String checkUser = "SELECT EXISTS(SELECT 1 FROM Exercise where ExerciseId = exercise.id);";
         String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);";
         //check if the exercise exists in the database using its id
         ResultSet rs = st.executeQuery(checkUser); 
