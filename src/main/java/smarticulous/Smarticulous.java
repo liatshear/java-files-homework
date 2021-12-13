@@ -157,7 +157,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        String CheckUser = "SELECT 1 FROM User where username = user.username;";
+        String CheckUser = "SELECT EXISTS (SELECT 1 FROM User where username = user.username);";
         String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES (user.username, user.firstname, user.lastname, password);";
         String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
         Statement stmt = db.createStatement();
@@ -246,10 +246,11 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public <MyType> List<Exercise> loadExercises() throws SQLException {
+
         List<Exercise> returnList = new ArrayList<Exercise>();
         Statement st = db.createStatement();
-        String checkUser = "SELECT * FROM Exercise ORDER BY ExerciseId;";
-        ResultSet rs = st.executeQuery(checkUser);
+        String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
+        ResultSet rs = st.executeQuery(GetExercises);
         while(rs.next()){
             int exId = rs.getInt("ExericseId");
             String name = rs.getString("Name");
@@ -275,18 +276,26 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int storeSubmission(Submission submission) throws SQLException {
         Statement st = db.createStatement();
-        String checkUser = "SELECT * FROM User WHERE submission.userId=UserId;"; 
-        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId, Password) VALUES(submission.id, submission.user, submission.exercise, submission.password);";
+        String checkUser = "SELECT EXISTS (SELECT * FROM User WHERE UserId=submission.userId);"; 
+        String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES(submission.user, submission.exercise);";
+        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES(submission.id, submission.user, submission.exercise);";
         //check if the user exists in the data base
-        ResultSet rs = st.executeQuery(checkUser);
+        ResultSet rs = st.executeQuery(checkUser); 
         if(rs == null){
             st.close();
             return -1;
         }
         else{
-            st.executeUpdate(InsertSub);
-            st.close();
-            return 1;
+            if (submission.id == -1){
+                st.executeUpdate(InsertSubNoId);
+                st.close();
+                return 1;
+            } 
+            else{
+                st.executeUpdate(InsertSub);
+                st.close();
+                return 1;
+            }
         }
     }
 
