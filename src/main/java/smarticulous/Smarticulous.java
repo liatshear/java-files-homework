@@ -95,36 +95,69 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
 
+
     
     public Connection openDB(String dburl) throws SQLException {
         Connection db = null;
-        Statement st = null;
         String url = "jdbc:sqlite:C:/sqlite/" + dburl;
+        String Usertable = "CREATE TABLE IF NOT EXISTS User (\n"
+        + "     UserId INTEGER PRIMARY KEY, \n"
+        + "     Username TEXT NOT NULL, \n"
+        + "     Firstname TEXT, \n"
+        + "     Lastname TEXT, \n"
+        + "     Password TEXT\n"
+        + ");";
+        String ExerciseTable = "CREATE TABLE IF NOT EXISTS Exercise (\n"
+        + "     ExerciseId INTEGER PRIMARY KEY, \n"
+        + "     Name TEXT, \n"
+        + "     DueDate INTEGER\n"
+        + ");";
+        String QuestionTable = "CREATE TABLE IF NOT EXISTS Question (\n"
+        + "     ExerciseId INTEGER, \n"
+        + "     QuestionId INTEGER, \n"
+        + "     Name TEXT, \n"
+        + "     Desc TEXT, \n"
+        + "     Points INTEGER, \n"
+        + "     PRIMARY KEY (ExerciseId, QuestionId)\n"
+        + ");";
+        String SubmissionTable = "CREATE TABLE IF NOT EXISTS Submission (\n"
+        + "     SubmissionId INTEGER PRIMARY KEY, \n"
+        + "     UserId INTEGER, \n"
+        + "     ExerciseId INTEGER, \n"
+        + "     Password TEXT\n"
+        + ");";
+        String QuestionGradeTable = "CREATE TABLE IF NOT EXISTS QuestionGrade (\n"
+        + "     SubmissionId INTEGER, \n"
+        + "     QuestionId INTEGER, \n"
+        + "     Grade REAL\n"
+        + ");";
         try{
             //get connection to dburl
             db = DriverManager.getConnection(url);
+            Statement st = db.createStatement();
+        
             //create table User
-            st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Password TEXT);");
+           
+            st.execute(Usertable);
             st.close();
             // create table Exercise
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, DueDate INTEGER);");
+            st.execute(ExerciseTable);
             st.close();
             // create table Question
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS Question (ExerciseId INTEGER, QuestionId INTEGER, Name TEXT, Desc TEXT, Points INTEGER, PRIMARY KEY (ExerciseId, QuestionId));");
+            st.execute(QuestionTable);
             st.close();
             // create table Submission
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS Submission (SubmissionId INTEGER PRIMARY KEY, UserId INTEGER, ExerciseId INTEGER, Password TEXT);");
+            st.execute(SubmissionTable);
             st.close();
             // create table QuestionGrade
             st = db.createStatement();
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS QuestionGrade (SubmissionId INTEGER, QuestionId INTEGER, Grade REAL);");
+            st.execute(QuestionGradeTable);
             st.close();
         } catch (SQLException e){
-            System.out.println(e);
+            System.out.println("Error connecting to SQLite database");
         } finally {
             try{
                 if(db != null){
@@ -164,8 +197,14 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        db = openDB(db.getMetaData().getURL());
-        Statement st = null;
+        //db = openDB(db.getMetaData().getURL());
+        String sql = "SELECT 1 FROM User where Username = user.username";
+        String insertUser = "INSERT INTO User(UserId, Username, Firstname, Lastname, Password) VALUES(?, ?, ?, ?, ?)";
+        String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE User='user.name'";
+        user.username, user.firstname, user.lastname, password
+        String updateUser = 
+        //try(Connection db = this.openDB();
+        
         st = db.createStatement();
         //check if there is a row in the table User with the same username
         ResultSet rs = st.executeQuery("SELECT 1 FROM User where Username = user.username;"); 
@@ -340,6 +379,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * This will be used by {@link #getBestSubmission(User, Exercise)}
      *
      */
+    // didnt do bonus
     PreparedStatement getBestSubmissionGradesStatement() throws SQLException {
         db = openDB(db.getMetaData().getURL());
         // TODO: Implement
