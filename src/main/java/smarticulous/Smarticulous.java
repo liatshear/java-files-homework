@@ -345,7 +345,6 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     // didnt do bonus
     PreparedStatement getBestSubmissionGradesStatement() throws SQLException {
-        db = openDB(db.getMetaData().getURL());
         // TODO: Implement
         return null;
     }
