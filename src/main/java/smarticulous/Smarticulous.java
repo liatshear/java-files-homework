@@ -5,8 +5,11 @@ import smarticulous.db.Submission;
 import smarticulous.db.User;
 
 import java.sql.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.naming.spi.DirStateFactory.Result;
 
 /**
  * The Smarticulous class, implementing a grading system.
@@ -156,24 +159,28 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        String CheckUser = "SELECT 1 FROM User where username = user.username;";
-        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES (user.username, user.firstname, user.lastname, password);";
-        String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
-        Statement stmt = db.createStatement();
+       // String CheckUser = "SELECT 1 FROM User where username = user.username;";
+        //String UserId = "SELECT UserId FROM User WHERE Username = '$user.username';";
+        //String select = "SELECT last_insert_rowid();";
+        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES ('$user.username', '$user.firstname', '$user.lastname', 'password') ON CONFLICT(Username) DO UPDATE SET Firstname = '$user.firstname', Lastname = '$user.lastname', Password = '$password';";
+        //String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
+        Statement st = db.createStatement();
         //check if there is a row in the table User with the same username
-        ResultSet rs = stmt.executeQuery(CheckUser); 
+        int rs = st.executeUpdate(insertUser);
+
+       // ResultSet rs = st.executeQuery(select); 
+        //int rs = st.executeQuery(UserId);
+        //$UserId = intval($row['UserId']);
         //if no results were returned, user does not exist and needs to be added
-        if (rs == null){
-            stmt.executeUpdate(insertUser);
-            stmt.close();
-            return 1;
-        }
+        //if (rs == null){
+           // stmt.executeUpdate(insertUser);
+        st.close();
+        return rs;
         // if there is a result, user exists and just needs to be updated
-        else{
-            stmt.executeUpdate(updateUser);
-            stmt.close();                
-            return 1;
-        }
+        //else{
+          //  stmt.executeUpdate(updateUser);
+            //stmt.close();                
+            //return 1;
     }
 
 
@@ -192,7 +199,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public boolean verifyLogin(String username, String password) throws SQLException {
         Statement stmt = db.createStatement();
         boolean check = false;
-        String checkUser = "SELECT * FROM User WHERE Username==username AND Password==password;";
+        String checkUser = "SELECT * FROM User WHERE Username='username' AND Password='password';";
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser); 
         if(rs != null){
@@ -217,8 +224,8 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
-        String checkUser = "SELECT 1 FROM Exercise where ExerciseId=exercise.exerciseid;";
-        String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);";
+        String checkUser = "SELECT 1 FROM Exercise WHERE ExerciseId='$exercise.id';";
+        String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.dueDate);";
         //check if the exercise exists in the database using its id
         ResultSet rs = st.executeQuery(checkUser); 
         //if no results were returned, exercise does not exist and needs to be added
@@ -248,10 +255,10 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
         List<Exercise> returnList = new ArrayList<Exercise>();
         Statement st = db.createStatement();
-        String GetExercises = "SELECT * FROM Exercise ORDER BY exerciseid;";
+        String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
         ResultSet rs = st.executeQuery(GetExercises);
         while(rs.next()){
-            int exId = rs.getInt("ExericseId");
+            int exId = rs.getInt("ExerciseId");
             String name = rs.getString("Name");
             Date DueDate = rs.getDate("DueDate");
             Exercise current = new Exercise(exId, name, DueDate);
@@ -275,9 +282,9 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int storeSubmission(Submission submission) throws SQLException {
         Statement st = this.db.createStatement();
-        String checkUser = "SELECT * FROM User WHERE UserId=submission.userid;"; 
-        String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES(submission.user, submission.exercise);";
-        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES(submission.id, submission.user, submission.exercise);";
+        String checkUser = "SELECT * FROM User WHERE UserId='$submission.id';"; 
+        String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES('$submission.user', '$submission.exercise');";
+        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES('$submission.id','$submission.user', '$submission.exercise');";
         //check if the user exists in the data base
         ResultSet rs = st.executeQuery(checkUser); 
         if(rs == null){
