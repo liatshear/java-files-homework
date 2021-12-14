@@ -98,7 +98,6 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
     
     public Connection openDB(String dburl) throws SQLException {
-        Connection db = null;
         String Usertable = "CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Password TEXT);";
         String ExerciseTable = "CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, DueDate INTEGER);";
         String QuestionTable = "CREATE TABLE IF NOT EXISTS Question (ExerciseId INTEGER, QuestionId INTEGER, Name TEXT, Desc TEXT, Points INTEGER, PRIMARY KEY (ExerciseId, QuestionId));";
@@ -121,14 +120,15 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             st.close();
         } catch (SQLException e){
             System.out.println("Error connecting to SQLite database");
-        } finally {
-            try{
-                closeDB();
-            } catch (SQLException ex){
-                System.out.println(ex.getMessage());
-            }
-        }
-        return null;
+        }// finally {
+          //  try{
+             //   closeDB();
+          //  } catch (SQLException ex){
+            //    System.out.println(ex.getMessage());
+         //   }
+       // }
+        db.setAutoCommit(false);
+        return db;
     }
 
     /**
@@ -192,9 +192,9 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @see <a href="https://crackstation.net/hashing-security.htm">How to Hash Passwords Properly</a>
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
-        Statement stmt = this.db.createStatement();
+        Statement stmt = db.createStatement();
         boolean check = false;
-        String checkUser = "SELECT EXISTS(SELECT * FROM User WHERE Username=username AND Password=password);";
+        String checkUser = "SELECT EXISTS(SELECT * FROM User WHERE Username==username AND Password==password);";
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser); 
         if(rs != null){
@@ -218,8 +218,8 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addExercise(Exercise exercise) throws SQLException {
-        Statement st = this.db.createStatement();
-        String checkUser = "SELECT EXISTS(SELECT 1 FROM Exercise where ExerciseId = exercise.id);";
+        Statement st = db.createStatement();
+        String checkUser = "SELECT EXISTS(SELECT 1 FROM Exercise where ExerciseId=exercise.exerciseid);";
         String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);";
         //check if the exercise exists in the database using its id
         ResultSet rs = st.executeQuery(checkUser); 
@@ -249,8 +249,8 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public <MyType> List<Exercise> loadExercises() throws SQLException {
 
         List<Exercise> returnList = new ArrayList<Exercise>();
-        Statement st = this.db.createStatement();
-        String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
+        Statement st = db.createStatement();
+        String GetExercises = "SELECT * FROM Exercise ORDER BY exerciseid;";
         ResultSet rs = st.executeQuery(GetExercises);
         while(rs.next()){
             int exId = rs.getInt("ExericseId");
@@ -277,7 +277,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int storeSubmission(Submission submission) throws SQLException {
         Statement st = this.db.createStatement();
-        String checkUser = "SELECT EXISTS (SELECT * FROM User WHERE UserId=submission.userId);"; 
+        String checkUser = "SELECT EXISTS (SELECT * FROM User WHERE UserId=submission.userid);"; 
         String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES(submission.user, submission.exercise);";
         String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES(submission.id, submission.user, submission.exercise);";
         //check if the user exists in the data base
