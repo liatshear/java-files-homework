@@ -143,6 +143,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         }
     }
 
+
     // =========== User Management =============
 
     /**
@@ -191,7 +192,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @see <a href="https://crackstation.net/hashing-security.htm">How to Hash Passwords Properly</a>
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
-        Statement stmt = db.createStatement();
+        Statement stmt = this.db.createStatement();
         boolean check = false;
         String checkUser = "SELECT EXISTS(SELECT * FROM User WHERE Username=username AND Password=password);";
         //check if there is a row in the table User with the same username
@@ -217,7 +218,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addExercise(Exercise exercise) throws SQLException {
-        Statement st = db.createStatement();
+        Statement st = this.db.createStatement();
         String checkUser = "SELECT EXISTS(SELECT 1 FROM Exercise where ExerciseId = exercise.id);";
         String insertInto = "INSERT INTO Exercise(ExerciseId, Name, DueDate) VALUES(exercise.id, exercise.name, exercise.duedate);";
         //check if the exercise exists in the database using its id
@@ -248,7 +249,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public <MyType> List<Exercise> loadExercises() throws SQLException {
 
         List<Exercise> returnList = new ArrayList<Exercise>();
-        Statement st = db.createStatement();
+        Statement st = this.db.createStatement();
         String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
         ResultSet rs = st.executeQuery(GetExercises);
         while(rs.next()){
@@ -275,7 +276,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int storeSubmission(Submission submission) throws SQLException {
-        Statement st = db.createStatement();
+        Statement st = this.db.createStatement();
         String checkUser = "SELECT EXISTS (SELECT * FROM User WHERE UserId=submission.userId);"; 
         String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES(submission.user, submission.exercise);";
         String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES(submission.id, submission.user, submission.exercise);";
@@ -321,8 +322,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @return
      */
     PreparedStatement getLastSubmissionGradesStatement() throws SQLException {
-        db = openDB(db.getMetaData().getURL());
-        
+       
         return null;
     }
 
