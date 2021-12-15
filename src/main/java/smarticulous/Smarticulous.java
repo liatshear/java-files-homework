@@ -160,23 +160,41 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?) ON CONFLICT(Username) DO UPDATE SET Firstname=?, Lastname=?, Password=?;";
+        Statement st = db.createStatement();
+        String checkUser = "SELECT * FROM User WHERE Username='"+user.username+"';";
+        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?);";
+        String UpdateUser = "UPDATE User SET Firstname=?, Lastname=?, Password=? WHERE Username=?;";
+        String getId = "SELECT UserId FROM User WHERE Username='"+user.username+"';";
         PreparedStatement ps = db.prepareStatement(insertUser);
+        PreparedStatement pst = db.prepareStatement(UpdateUser);
         ps.setString(1, user.username);
         ps.setString(2, user.firstname);
         ps.setString(3, user.lastname);
         ps.setString(4, password);
-        ps.setString(5, user.firstname);
-        ps.setString(6, user.lastname);
-        ps.setString(7, password);
-        ps.executeUpdate();
-        ResultSet generatedKeys = ps.getGeneratedKeys();
+        pst.setString(1, user.firstname);
+        pst.setString(2, user.lastname);
+        pst.setString(3, password);
+        pst.setString(4, user.username);
+        ResultSet rs = st.executeQuery(checkUser);
         int userId = 0;
-        if(generatedKeys.next()) {
-            userId = generatedKeys.getInt(1);
+        ResultSet generatedKeys;
+        if(!rs.next()){
+            ps.executeUpdate();
+            generatedKeys = ps.getGeneratedKeys(); 
+            if(generatedKeys.next()){
+                userId = generatedKeys.getInt(1);
+            }
         }
-        ps.close();
+        else{
+            pst.executeUpdate();
+            generatedKeys = st.executeQuery(getId);
+            while(generatedKeys.next()){
+                userId = generatedKeys.getInt("UserId");
+            }
+        }
         generatedKeys.close();
+        ps.close();
+        pst.close();
         db.commit();
         return userId;
     }
