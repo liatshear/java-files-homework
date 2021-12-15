@@ -161,13 +161,15 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
        // String CheckUser = "SELECT 1 FROM User where username = user.username;";
-        //String UserId = "SELECT UserId FROM User WHERE Username = '$user.username';";
+        String UserId = "SELECT UserId FROM User WHERE Username = 'user.username';";
         //String select = "SELECT last_insert_rowid();";
         String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES ('$user.username', '$user.firstname', '$user.lastname', 'password') ON CONFLICT(Username) DO UPDATE SET Firstname = '$user.firstname', Lastname = '$user.lastname', Password = '$password';";
         //String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
         Statement st = db.createStatement();
         //check if there is a row in the table User with the same username
-        int rs = st.executeUpdate(insertUser);
+        st.executeUpdate(insertUser);
+        ResultSet res = st.executeQuery(UserId);
+        int userID = res.getInt(1);
 
        // ResultSet rs = st.executeQuery(select); 
         //int rs = st.executeQuery(UserId);
@@ -176,7 +178,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         //if (rs == null){
            // stmt.executeUpdate(insertUser);
         st.close();
-        return rs;
+        return userID;
         // if there is a result, user exists and just needs to be updated
         //else{
           //  stmt.executeUpdate(updateUser);
@@ -199,16 +201,15 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
         Statement stmt = db.createStatement();
-        String checkUser = "SELECT Password FROM User WHERE Username='username';";
+        String checkUser = "SELECT Password FROM User WHERE Username='"+ username +"';";
         //check if there is a row in the table User with the same username
-        ResultSet rs = stmt.executeQuery(checkUser); 
-        stmt.close();
-        if(rs.getString(1).equals(password)){
+        ResultSet rs = stmt.executeQuery(checkUser);
+        while(rs.next()){
+        if(rs.getString("Password").equals(password)){
             return true;
         }
-        else{
-            return false;
-        }
+    }
+        return false;
     }
 
     // =========== Exercise Management =============
