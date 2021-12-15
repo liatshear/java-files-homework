@@ -199,19 +199,16 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public boolean verifyLogin(String username, String password) throws SQLException {
         Statement stmt = db.createStatement();
-        boolean check = false;
-        String checkUser = "SELECT 1 FROM User WHERE Username='username' AND Password='password';";
+        String checkUser = "SELECT Password FROM User WHERE Username='username';";
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser); 
-        if(rs != null){
-            stmt.close();
+        stmt.close();
+        if(rs.getString(1).equals(password)){
             return true;
         }
         else{
-            check = false;
+            return false;
         }
-        stmt.close();
-        return check;
     }
 
     // =========== Exercise Management =============
@@ -226,11 +223,11 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
         //String checkUser = "SELECT 1 FROM Exercise WHERE ExerciseId='$exercise.id';";
-        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES(`"+exercise.id+"`,"+exercise.name+",`"+exercise.dueDate.getTime()+"`)";
+        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES("+exercise.id+","+exercise.name+","+exercise.dueDate.getTime()+")";
         //check if the exercise exists in the database using its id
         int rs = st.executeUpdate(insertInto); 
         for(Exercise.Question question: exercise.questions){
-            String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES(`"+exercise.id+"`,"+question.name+","+question.desc+",`"+question.points+"`)";
+            String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES("+exercise.id+","+question.name+","+question.desc+","+question.points+")";
             st.executeUpdate(insertQuestion);
         }
         //check if exercise was added
@@ -259,25 +256,35 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public <MyType> List<Exercise> loadExercises() throws SQLException {
 
         List<Exercise> returnList = new ArrayList<Exercise>();
-        //List<Question> questions = new ArrayList<Question>();
+        //ArrayList<Question> questions = new ArrayList<Question>();
         Statement st = db.createStatement();
         String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
-        //String GetQuestions = "SELECT questions FROM Exercise;";
+        String GetQuestions = "SELECT * FROM Question WHERE ExerciseId = ?;";
+        PreparedStatement ps = db.prepareStatement(GetQuestions);
         ResultSet rs = st.executeQuery(GetExercises);
+        //GetQuestions.setInt()
+        //ResultSet qs = st.executeQuery(GetQuestions);
+        st.close();
         //ResultSet qs = st.executeQuery(GetQuestions);
         while(rs.next()){
             int exId = rs.getInt("ExerciseId");
             String name = rs.getString("Name");
             Date DueDate = rs.getDate("DueDate");
             Exercise current = new Exercise(exId, name, DueDate);
-            //while(qs.next()){
+            Statement stmt = db.createStatement();
+            ps.setInt(1, exId);
+            ResultSet qs = stmt.executeQuery(GetQuestions);
+            while(qs.next()){
                 String Qname = rs.getString("name");
                 String Qdesc = rs.getString("desc");
                 int Qpoints = rs.getInt("points");
+                //Exercise.Question q = new Exercise.Question(Qname, Qdesc, Qpoints);
+                //questions.add(q);
                 current.addQuestion(Qname, Qdesc, Qpoints);
                 //Question q = new Question(Qname, Qdesc, Qpoints);
                 //current.questions.add(q);
-            //}
+            }
+            stmt.close();
             returnList.add(current);
         }
         st.close();
@@ -303,7 +310,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES('$submission.id','$submission.user', '$submission.exercise');";
         //check if the user exists in the data base
         ResultSet rs = st.executeQuery(checkUser); 
-        if(rs == null){
+        if(!rs.next()){
             st.close();
             return -1;
         }
