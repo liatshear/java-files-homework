@@ -279,28 +279,21 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         Statement st = db.createStatement();
         String GetExercises = "SELECT *, COUNT(QuestionId) FROM Exercise INNER JOIN Question ON " + "Exercise.ExerciseId = Question.ExerciseId GROUP BY Question.ExerciseId ORDER BY Exercise.ExerciseId ASC;";
         String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId ASC;";
-        PreparedStatement ps = db.prepareStatement(GetQuestions);
-        ResultSet rs = st.executeQuery(GetExercises);
-        st.close();
-        while(rs.next()){
-            Exercise current = new Exercise(rs.getInt("ExerciseId"), rs.getString("Name"), new Date(rs.getInt("DueDate")));
-            ps.setInt(1, current.id);
-            //ResultSet qs = ps.executeQuery();
-            //while(qs.next()){
-            int cur;
-            int NumEx = rs.getInt("COUNT(QuestionId)");
-            ResultSet qs = st.executeQuery(GetQuestions);
+        ResultSet es = st.executeQuery(GetExercises);
+        ResultSet qs = st.executeQuery(GetQuestions);
+        while(es.next()){
+            Exercise current = new Exercise(es.getInt("ExerciseId"), es.getString("Name"), new Date(es.getInt("DueDate")));
+            int cur = 0;
+            int NumEx = es.getInt("COUNT(QuestionId)");
             for(cur = 0; cur < NumEx; cur++){
                 qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
-
             }
-            qs.close();
-        db.commit();
-        returnList.add(current);
+            returnList.add(current);
         }
-        rs.close();
         st.close();
+        qs.close();
+        es.close();
         db.commit();
         return returnList;
     }
