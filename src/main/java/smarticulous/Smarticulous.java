@@ -109,15 +109,11 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             //get connection to dburl
             db = DriverManager.getConnection(dburl);
             Statement st = db.createStatement();
-            //create table User
+            //create table User, Exercise, Question, Submission,QuestionGrade
             st.execute(Usertable);
-            // create table Exercise
             st.execute(ExerciseTable);
-            // create table Question
             st.execute(QuestionTable);
-            // create table Submission
             st.execute(SubmissionTable);
-            // create table QuestionGrade
             st.execute(QuestionGradeTable);
             st.close();
         } catch (SQLException e){
@@ -240,7 +236,6 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String checkUser = "SELECT * FROM Exercise WHERE ExerciseId='"+exercise.id+"';";
         String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES ("+exercise.id+",'"+exercise.name+"',"+exercise.dueDate.getTime()+");";
         PreparedStatement ps = db.prepareStatement(insertInto);
-        //check if the exercise exists in the database using its id
         ResultSet rs = st.executeQuery(checkUser);
         if(!rs.next()){
             ps.executeUpdate(); 
@@ -265,16 +260,8 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         ps.close();
         generatedKeys.close();
         return exId;
-        //check if exercise was added
-        //if (rs > 0){
-          //  st.close();
-            //return exercise.id;
-        }
-        // if there is a result just return -1 if exercise already exists 
-        //else{
-          //  st.close();
-            //return -1;
-
+    }
+      
     /**
      * Return a list of all the exercises in the database.
      * <p>
@@ -284,41 +271,32 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @return list of all exercises.
      * @throws SQLException
      */
+
+
     public <MyType> List<Exercise> loadExercises() throws SQLException {
 
         List<Exercise> returnList = new ArrayList<Exercise>();
-        //ArrayList<Question> questions = new ArrayList<Question>();
         Statement st = db.createStatement();
         String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
-        String GetQuestions = "SELECT * FROM Question WHERE ExerciseId = ?;";
+        String GetQuestions = "SELECT * FROM Question WHERE ExerciseId=?";
         PreparedStatement ps = db.prepareStatement(GetQuestions);
         ResultSet rs = st.executeQuery(GetExercises);
-        //GetQuestions.setInt()
-        //ResultSet qs = st.executeQuery(GetQuestions);
         st.close();
-        //ResultSet qs = st.executeQuery(GetQuestions);
         while(rs.next()){
-            int exId = rs.getInt("ExerciseId");
-            String name = rs.getString("Name");
-            Date DueDate = rs.getDate("DueDate");
-            Exercise current = new Exercise(exId, name, DueDate);
-            Statement stmt = db.createStatement();
-            ps.setInt(1, exId);
-            ResultSet qs = stmt.executeQuery(GetQuestions);
+            Exercise current = new Exercise(rs.getInt("ExerciseId"), rs.getString("Name"), rs.getDate("DueDate"));
+            ps.setInt(1, current.id);
+            ResultSet qs = ps.executeQuery();
             while(qs.next()){
-                String Qname = rs.getString("name");
-                String Qdesc = rs.getString("desc");
-                int Qpoints = rs.getInt("points");
-                //Exercise.Question q = new Exercise.Question(Qname, Qdesc, Qpoints);
-                //questions.add(q);
-                current.addQuestion(Qname, Qdesc, Qpoints);
-                //Question q = new Question(Qname, Qdesc, Qpoints);
-                //current.questions.add(q);
+                current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
+                db.commit();
             }
-            stmt.close();
-            returnList.add(current);
+            ps.close();
+            qs.close();
+            db.commit();
+        returnList.add(current);
         }
-        st.close();
+        rs.close();
+        db.commit();
         return returnList;
     }
 
@@ -335,28 +313,50 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int storeSubmission(Submission submission) throws SQLException {
-        Statement st = this.db.createStatement();
-        String checkUser = "SELECT * FROM User WHERE UserId='$submission.id';"; 
-        String InsertSubNoId = "INSERT INTO Submission(UserId, ExerciseId) VALUES('$submission.user', '$submission.exercise');";
-        String InsertSub = "INSERT INTO Submission(SubmissionId, UserId, ExerciseId) VALUES('$submission.id','$submission.user', '$submission.exercise');";
+        Statement st = db.createStatement();
+        String checkUser = "SELECT UserId FROM User WHERE Username='"+submission.user.username+"';"; 
+        int UserID = 0;
+        String GetUserId = "SELECT SubmissionId FROM Submission ORDER BY SubmissionId DESC LIMIT 1;";
         //check if the user exists in the data base
-        ResultSet rs = st.executeQuery(checkUser); 
-        if(!rs.next()){
+        ResultSet rs = st.executeQuery(checkUser);
+        //if the resullt set is empty then the user doesnt exist and return -1
+        if(rs.next()){
+            UserID = rs.getInt("UserId");
+            rs.close();
             st.close();
-            return -1;
+            db.commit();
         }
         else{
-            if (submission.id == -1){
-                st.executeUpdate(InsertSubNoId);
-                st.close();
-                return 1;
-            } 
-            else{
-                st.executeUpdate(InsertSub);
-                st.close();
-                return 1;
-            }
+            return -1;
         }
+        // this means that the corresponding user exists in the database
+        
+            // check if the submission id is not -1 and if no, then insert submission as normal
+        int subID = submission.id;
+        if (submission.id != -1){
+            String InsertSub = "INSERT INTO Submission (SubmissionId, UserId, ExerciseId, SubmissionTime) VALUES("+submission.id+","+ UserID +", "+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
+            Statement stmt1 = db.createStatement();
+            stmt1.executeUpdate(InsertSub);
+            stmt1.close();
+            db.commit();
+            return subID;
+        }
+        else{ // this means the submission id == -1 and therefore insert without id field
+            Statement stmt2 = db.createStatement();
+            String InsertSubNoId = "INSERT INTO Submission (UserId, ExerciseId, SubmissionTime) VALUES("+UserID+","+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
+            stmt2.executeUpdate(InsertSubNoId);
+            stmt2.close();
+            Statement stmt3 = db.createStatement();
+            ResultSet getsubId = stmt3.executeQuery(GetUserId);
+            if(getsubId.next()){
+                subID = getsubId.getInt("SubmissionId");
+            }
+            stmt3.close();
+            getsubId.close();
+            db.commit();
+            return subID;
+
+        } 
     }
 
 
@@ -381,7 +381,20 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @return
      */
     PreparedStatement getLastSubmissionGradesStatement() throws SQLException {
-       
+        /**Statement st = db.createStatement();
+        String query= SELECT Question
+         FROM Exercise USING (ExerciseId)
+               Submission Using (SubmissionId)
+               User USING (UserId)
+
+        String LatestSub = "SELECT 1 FROM Submission ORDER BY SubmissionTime DESC;";
+        String getEx = "SELECT Exercise FROM Submission;";
+        String getExid = "SELECT ExerciseId FROM EXERCISE;";
+        String getUser = "SELECT"
+        String getQs = "SELECT * FROM Question WHERE ExerciseId = "+exercise.id+""
+        ORDER BY QuestionId";
+        PreparedStatement pt = db.prepareStatement(query);
+        pt.executeQuery();*/
         return null;
     }
 
