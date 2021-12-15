@@ -160,7 +160,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?) ON CONFLICT(Username) DO UPDATE SET 'Firstname'=?, 'Lastname'=?, 'Password'=?;";
+        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?) ON CONFLICT(Username) DO UPDATE SET Firstname=?, Lastname=?, Password=?;";
         PreparedStatement ps = db.prepareStatement(insertUser);
         ps.setString(1, user.username);
         ps.setString(2, user.firstname);
@@ -219,28 +219,43 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
-        //String checkUser = "SELECT 1 FROM Exercise WHERE ExerciseId='$exercise.id';";
-        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES('"+exercise.id+"','"+exercise.name+"','"+exercise.dueDate.getTime()+"');";
+        String checkUser = "SELECT * FROM Exercise WHERE ExerciseId='"+exercise.id+"';";
+        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES ("+exercise.id+",'"+exercise.name+"',"+exercise.dueDate.getTime()+");";
+        PreparedStatement ps = db.prepareStatement(insertInto);
         //check if the exercise exists in the database using its id
-        int rs = st.executeUpdate(insertInto); 
-        for(Exercise.Question question: exercise.questions){
-            String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES("+exercise.id+","+question.name+","+question.desc+","+question.points+")";
-            st.executeUpdate(insertQuestion);
+        ResultSet rs = st.executeQuery(checkUser);
+        if(!rs.next()){
+            ps.executeUpdate(); 
+            st.close();
+            for(Exercise.Question question: exercise.questions){
+                st = db.createStatement();
+                String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES('"+exercise.id+"', '"+question.name+"','"+question.desc+"',"+question.points+ ");";
+                st.executeUpdate(insertQuestion);
+                st.close();
+            }
+        }
+        else{
+            db.commit();
+            return -1;
         }
         db.commit();
+        ResultSet generatedKeys = ps.getGeneratedKeys();
+        int exId = 0;
+        if(generatedKeys.next()) {
+            exId = generatedKeys.getInt(1);
+        }
+        ps.close();
+        generatedKeys.close();
+        return exId;
         //check if exercise was added
-        if (rs > 0){
-            st.close();
-            return exercise.id;
+        //if (rs > 0){
+          //  st.close();
+            //return exercise.id;
         }
         // if there is a result just return -1 if exercise already exists 
-        else{
-            st.close();
-            return -1;
-        }   
-       
-    }
-
+        //else{
+          //  st.close();
+            //return -1;
 
     /**
      * Return a list of all the exercises in the database.
