@@ -275,27 +275,32 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
     public <MyType> List<Exercise> loadExercises() throws SQLException {
 
-        List<Exercise> returnList = new ArrayList<Exercise>();
+        List<Exercise> returnList = new ArrayList<>();
         Statement st = db.createStatement();
-        String GetExercises = "SELECT * FROM Exercise ORDER BY ExerciseId;";
-        String GetQuestions = "SELECT * FROM Question WHERE ExerciseId=?";
+        String GetExercises = "SELECT *, COUNT(QuestionId) FROM Exercise INNER JOIN Question ON " + "Exercise.ExerciseId = Question.ExerciseId GROUP BY Question.ExerciseId ORDER BY Exercise.ExerciseId ASC;";
+        String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId ASC;";
         PreparedStatement ps = db.prepareStatement(GetQuestions);
         ResultSet rs = st.executeQuery(GetExercises);
         st.close();
         while(rs.next()){
-            Exercise current = new Exercise(rs.getInt("ExerciseId"), rs.getString("Name"), rs.getDate("DueDate"));
+            Exercise current = new Exercise(rs.getInt("ExerciseId"), rs.getString("Name"), new Date(rs.getInt("DueDate")));
             ps.setInt(1, current.id);
-            ResultSet qs = ps.executeQuery();
-            while(qs.next()){
+            //ResultSet qs = ps.executeQuery();
+            //while(qs.next()){
+            int cur;
+            int NumEx = rs.getInt("COUNT(QuestionId)");
+            ResultSet qs = st.executeQuery(GetQuestions);
+            for(cur = 0; cur < NumEx; cur++){
+                qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
-                db.commit();
+
             }
-            ps.close();
             qs.close();
-            db.commit();
+        db.commit();
         returnList.add(current);
         }
         rs.close();
+        st.close();
         db.commit();
         return returnList;
     }
@@ -315,10 +320,10 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public int storeSubmission(Submission submission) throws SQLException {
         Statement st = db.createStatement();
         String checkUser = "SELECT UserId FROM User WHERE Username='"+submission.user.username+"';"; 
-        int UserID = 0;
         String GetUserId = "SELECT SubmissionId FROM Submission ORDER BY SubmissionId DESC LIMIT 1;";
         //check if the user exists in the data base
         ResultSet rs = st.executeQuery(checkUser);
+        int UserID = 0;
         //if the resullt set is empty then the user doesnt exist and return -1
         if(rs.next()){
             UserID = rs.getInt("UserId");
