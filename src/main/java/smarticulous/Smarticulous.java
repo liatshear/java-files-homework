@@ -175,6 +175,9 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         if(generatedKeys.next()) {
             userId = generatedKeys.getInt(1);
         }
+        ps.close();
+        generatedKeys.close();
+        db.commit();
         return userId;
     }
 
@@ -196,6 +199,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String checkUser = "SELECT Password FROM User WHERE Username='"+ username +"';";
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser);
+        db.commit();
         while(rs.next()){
         if(rs.getString("Password").equals(password)){
             return true;
@@ -216,13 +220,14 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
         //String checkUser = "SELECT 1 FROM Exercise WHERE ExerciseId='$exercise.id';";
-        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES('"+exercise.id+"','"+exercise.name+"','"+exercise.dueDate.getTime()+"')";
+        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES('"+exercise.id+"','"+exercise.name+"','"+exercise.dueDate.getTime()+"');";
         //check if the exercise exists in the database using its id
         int rs = st.executeUpdate(insertInto); 
         for(Exercise.Question question: exercise.questions){
             String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES("+exercise.id+","+question.name+","+question.desc+","+question.points+")";
             st.executeUpdate(insertQuestion);
         }
+        db.commit();
         //check if exercise was added
         if (rs > 0){
             st.close();
