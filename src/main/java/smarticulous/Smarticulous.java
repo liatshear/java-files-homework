@@ -100,7 +100,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
     
     public Connection openDB(String dburl) throws SQLException {
-        String Usertable = "CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT NOT NULL, Firstname TEXT, Lastname TEXT, Password TEXT);";
+        String Usertable = "CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT UNIQUE, Firstname TEXT, Lastname TEXT, Password TEXT);";
         String ExerciseTable = "CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, DueDate INTEGER);";
         String QuestionTable = "CREATE TABLE IF NOT EXISTS Question (ExerciseId INTEGER, QuestionId INTEGER, Name TEXT, Desc TEXT, Points INTEGER, PRIMARY KEY (ExerciseId, QuestionId));";
         String SubmissionTable = "CREATE TABLE IF NOT EXISTS Submission (SubmissionId INTEGER PRIMARY KEY, UserId INTEGER, ExerciseId INTEGER, SubmissionTime INTEGER);";
@@ -160,30 +160,22 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @throws SQLException
      */
     public int addOrUpdateUser(User user, String password) throws SQLException {
-       // String CheckUser = "SELECT 1 FROM User where username = user.username;";
-        String UserId = "SELECT UserId FROM User WHERE Username = 'user.username';";
-        //String select = "SELECT last_insert_rowid();";
-        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) VALUES ('$user.username', '$user.firstname', '$user.lastname', 'password') ON CONFLICT(Username) DO UPDATE SET Firstname = '$user.firstname', Lastname = '$user.lastname', Password = '$password';";
-        //String updateUser = "UPDATE User SET Firstname=user.firstname, Lastname=user.lastname, Password=password WHERE Username=user.username;";
-        Statement st = db.createStatement();
-        //check if there is a row in the table User with the same username
-        st.executeUpdate(insertUser);
-        ResultSet res = st.executeQuery(UserId);
-        int userID = res.getInt(1);
-
-       // ResultSet rs = st.executeQuery(select); 
-        //int rs = st.executeQuery(UserId);
-        //$UserId = intval($row['UserId']);
-        //if no results were returned, user does not exist and needs to be added
-        //if (rs == null){
-           // stmt.executeUpdate(insertUser);
-        st.close();
-        return userID;
-        // if there is a result, user exists and just needs to be updated
-        //else{
-          //  stmt.executeUpdate(updateUser);
-            //stmt.close();                
-            //return 1;
+        String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?) ON CONFLICT(Username) DO UPDATE SET 'Firstname'=?, 'Lastname'=?, 'Password'=?;";
+        PreparedStatement ps = db.prepareStatement(insertUser);
+        ps.setString(1, user.username);
+        ps.setString(2, user.firstname);
+        ps.setString(3, user.lastname);
+        ps.setString(4, password);
+        ps.setString(5, user.firstname);
+        ps.setString(6, user.lastname);
+        ps.setString(7, password);
+        ps.executeUpdate();
+        ResultSet generatedKeys = ps.getGeneratedKeys();
+        int userId = 0;
+        if(generatedKeys.next()) {
+            userId = generatedKeys.getInt(1);
+        }
+        return userId;
     }
 
 
@@ -224,7 +216,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public int addExercise(Exercise exercise) throws SQLException {
         Statement st = db.createStatement();
         //String checkUser = "SELECT 1 FROM Exercise WHERE ExerciseId='$exercise.id';";
-        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES("+exercise.id+","+exercise.name+","+exercise.dueDate.getTime()+")";
+        String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES('"+exercise.id+"','"+exercise.name+"','"+exercise.dueDate.getTime()+"')";
         //check if the exercise exists in the database using its id
         int rs = st.executeUpdate(insertInto); 
         for(Exercise.Question question: exercise.questions){
