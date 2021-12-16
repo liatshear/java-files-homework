@@ -157,6 +157,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String insertUser = "INSERT INTO User (Username, Firstname, Lastname, Password) " + "VALUES (?, ?, ?, ?);";
         String UpdateUser = "UPDATE User SET Firstname=?, Lastname=?, Password=? WHERE Username=?;";
         String getId = "SELECT UserId FROM User WHERE Username='"+user.username+"';";
+        // prepare statements to insert and update users and add values to the queries 
         PreparedStatement ps = db.prepareStatement(insertUser);
         PreparedStatement pst = db.prepareStatement(UpdateUser);
         ps.setString(1, user.username);
@@ -167,23 +168,30 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         pst.setString(2, user.lastname);
         pst.setString(3, password);
         pst.setString(4, user.username);
+        // check if user exists in the system or not
         ResultSet rs = st.executeQuery(checkUser);
         int userId = 0;
         ResultSet generatedKeys;
+        // if the result set is empty, no user exists and thus INSERT user
         if(!rs.next()){
             ps.executeUpdate();
+            // get the last generated userid using the prepared statement 
             generatedKeys = ps.getGeneratedKeys(); 
             if(generatedKeys.next()){
+                // only one id will be returned since there was a single update
                 userId = generatedKeys.getInt(1);
             }
         }
+        // the user was found and therefore we need to update their information
         else{
             pst.executeUpdate();
+            // get their user id using the prepared statement and return UserId
             generatedKeys = st.executeQuery(getId);
             while(generatedKeys.next()){
                 userId = generatedKeys.getInt("UserId");
             }
         }
+        // close all statements and resultsets that were open, as well as commit and return the user id
         generatedKeys.close();
         ps.close();
         pst.close();
