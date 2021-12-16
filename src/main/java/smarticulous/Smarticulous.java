@@ -290,11 +290,12 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
     public <MyType> List<Exercise> loadExercises() throws SQLException {
         // create array list of exercises to return
         List<Exercise> returnList = new ArrayList<>();
-        ArrayList<Question> questions = new ArrayList<>();
         Statement st = db.createStatement();
         // select queries to get all the exercises from Exercise and to get the questions from the exercise
         String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId;";
         String GetExercises = "SELECT *, COUNT(QuestionId) FROM Exercise INNER JOIN Question ON " + "Exercise.ExerciseId = Question.ExerciseId GROUP BY Question.ExerciseId ORDER BY Exercise.ExerciseId;";
+        String getQcount = "SELECT COUNT(*) FROM Question WHERE ExerciseId = ?;";
+        PreparedStatement ps = db.prepareStatement(getQcount);
         // execute the queries to get the exercises and the questions
         ResultSet es = st.executeQuery(GetExercises);
         ResultSet qs = st.executeQuery(GetQuestions);
@@ -302,19 +303,25 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         st.close();
         // create while loop to iterate through all the exercises
         while(es.next()){
+            int exID = es.getInt("ExerciseId");
             Statement stmt = db.createStatement();
             // create new exercise using the current exercises exid, name and date
-            Exercise current = new Exercise(es.getInt("ExerciseId"), es.getString("Name"), new Date(es.getInt("DueDate")));
+            Exercise current = new Exercise(exID, es.getString("Name"), new Date(es.getInt("DueDate")));
             int cur = 0;
-            String command = "COUNT(QuestionId)";
+            ps.setInt(1, exID);
+            ResultSet qus = ps.executeQuery();
+            while(qus.next()){
+                numEx = qus.getInt(1);
+            
             // assign numEx to be the number of questions in the exercise
-            numEx = es.getInt(command);
+            //numEx = es.getInt(command);
             // create a for loop to iterate through the questions array in the exercise and add each one to the current exercise
-            for(cur = 0; cur < numEx; cur++){
+            //for(cur = 0; cur < 10; cur++){
                 qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
                 db.commit();
-            }
+            //}
+        }
             stmt.close();
             db.commit();
             returnList.add(current);
