@@ -218,11 +218,14 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         //check if there is a row in the table User with the same username
         ResultSet rs = stmt.executeQuery(checkUser);
         db.commit();
+        // check in the result set for the password of the user if they were found in the system
         while(rs.next()){
-        if(rs.getString("Password").equals(password)){
+            // compare the password of the given username in the database to the password given by user
+            if(rs.getString("Password").equals(password)){
             return true;
+            }
         }
-    }
+        // the passwords didnt match or the user was not found in the system
         return false;
     }
 
@@ -241,26 +244,33 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String insertInto = "INSERT INTO Exercise (ExerciseId, Name, DueDate) VALUES ("+exercise.id+",'"+exercise.name+"',"+exercise.dueDate.getTime()+");";
         PreparedStatement ps = db.prepareStatement(insertInto);
         ResultSet rs = st.executeQuery(checkUser);
+        // check if a user with the id already exists in the database
         if(!rs.next()){
+            //if the set is empty, no exercise with this id exists in the database and therefore insert the new exercise 
             ps.executeUpdate(); 
             st.close();
+            // now go through each question in the exercise
             for(Exercise.Question question: exercise.questions){
                 st = db.createStatement();
+                // insert each question from the exercise into Question
                 String insertQuestion = "INSERT INTO Question (ExerciseId, Name, Desc, Points) VALUES('"+exercise.id+"', '"+question.name+"','"+question.desc+"',"+question.points+ ");";
                 st.executeUpdate(insertQuestion);
                 st.close();
             }
         }
+        // therefore a user with this id already exists in the database and thus return -1 as required
         else{
-            db.commit();
             return -1;
         }
         db.commit();
+        // use the prepared statement to get the user id
         ResultSet generatedKeys = ps.getGeneratedKeys();
         int exId = 0;
         if(generatedKeys.next()) {
+            // this will return the userid as its the only generated key in the update
             exId = generatedKeys.getInt(1);
         }
+        // close all statements which have been opened and return the generated userid
         ps.close();
         generatedKeys.close();
         return exId;
