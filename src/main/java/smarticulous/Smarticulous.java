@@ -100,6 +100,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
     
     public Connection openDB(String dburl) throws SQLException {
+        // create strings to create tables user, exericse, question, submission and questiongrade
         String Usertable = "CREATE TABLE IF NOT EXISTS User (UserId INTEGER PRIMARY KEY, Username TEXT UNIQUE, Firstname TEXT, Lastname TEXT, Password TEXT);";
         String ExerciseTable = "CREATE TABLE IF NOT EXISTS Exercise (ExerciseId INTEGER PRIMARY KEY, Name TEXT, DueDate INTEGER);";
         String QuestionTable = "CREATE TABLE IF NOT EXISTS Question (ExerciseId INTEGER, QuestionId INTEGER, Name TEXT, Desc TEXT, Points INTEGER, PRIMARY KEY (ExerciseId, QuestionId));";
@@ -118,13 +119,8 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
             st.close();
         } catch (SQLException e){
             System.out.println("Error connecting to SQLite database");
-        }// finally {
-          //  try{
-             //   closeDB();
-          //  } catch (SQLException ex){
-            //    System.out.println(ex.getMessage());
-         //   }
-       // }
+        }
+        // set auto commit to false and return connection
         db.setAutoCommit(false);
         return db;
     }
@@ -281,14 +277,22 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId ASC;";
         ResultSet es = st.executeQuery(GetExercises);
         ResultSet qs = st.executeQuery(GetQuestions);
+        int numEx = 0;
+        while(qs.next()){
+            qs.getInt("QuestionId");
+            numEx++;
+        }
         while(es.next()){
+            Statement stmt = db.createStatement();
             Exercise current = new Exercise(es.getInt("ExerciseId"), es.getString("Name"), new Date(es.getInt("DueDate")));
             int cur = 0;
-            int NumEx = es.getInt("COUNT(QuestionId)");
-            for(cur = 0; cur < NumEx; cur++){
+            for(cur = 0; cur < numEx; cur++){
                 qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
+                db.commit();
             }
+            stmt.close();
+            db.commit();
             returnList.add(current);
         }
         st.close();
