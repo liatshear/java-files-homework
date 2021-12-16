@@ -317,7 +317,7 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         // close statements and return exercise list
         st1.close();
         st2.close();
-        //db.commit();
+        db.commit();
         return returnList;
     }
 
