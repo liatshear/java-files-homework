@@ -301,23 +301,22 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
         // create while loop to iterate through all the exercises
         while(es.next()){
             int exID = es.getInt("ExerciseId");
+            String name = es.getString("Name");
             // create new exercise using the current exercises exid, name and date
-            Exercise current = new Exercise(exID, es.getString("Name"), new Date(es.getInt("DueDate")));
+            Exercise current = new Exercise(exID, name, new Date(es.getInt("DueDate")));
             // assign numEx to be the number of questions in the exercise
             int numEx = es.getInt("COUNT(QuestionId)");
+            int cur = 0;
             // create a for loop to iterate through the questions array in the exercise and add each one to the current exercise
-            for(int j = 0; j < numEx; j++){
+            for(cur = 0; cur < numEx; cur++){
                 qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
-                //db.commit();
             }
-            //db.commit();
             returnList.add(current);
         }
+        // close statements and return exercise list
         st1.close();
         st2.close();
-        //qs.close();
-        //es.close();
         //db.commit();
         return returnList;
     }
