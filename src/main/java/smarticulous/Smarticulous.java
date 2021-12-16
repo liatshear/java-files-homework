@@ -257,23 +257,23 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
                 st.executeUpdate(insertQuestion);
                 st.close();
             }
+            db.commit();
+            // use the prepared statement to get the user id
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            int exId = 0;
+            if(generatedKeys.next()) {
+                // this will return the userid as its the only generated key in the update
+                exId = generatedKeys.getInt(1);
+            }
+            // close all statements which have been opened and return the generated userid
+            ps.close();
+            generatedKeys.close();
+            return exId;
         }
         // therefore a user with this id already exists in the database and thus return -1 as required
         else{
             return -1;
         }
-        db.commit();
-        // use the prepared statement to get the user id
-        ResultSet generatedKeys = ps.getGeneratedKeys();
-        int exId = 0;
-        if(generatedKeys.next()) {
-            // this will return the userid as its the only generated key in the update
-            exId = generatedKeys.getInt(1);
-        }
-        // close all statements which have been opened and return the generated userid
-        ps.close();
-        generatedKeys.close();
-        return exId;
     }
       
     /**
@@ -334,48 +334,52 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      */
     public int storeSubmission(Submission submission) throws SQLException {
         Statement st = db.createStatement();
+        // sql queries to check if user exists in the database
         String checkUser = "SELECT UserId FROM User WHERE Username='"+submission.user.username+"';"; 
-        String GetUserId = "SELECT SubmissionId FROM Submission ORDER BY SubmissionId DESC LIMIT 1;";
+        // sql query to get the submission id to return
+        String GetSubId = "SELECT SubmissionId FROM Submission ORDER BY SubmissionId DESC LIMIT 1;";
         //check if the user exists in the data base
         ResultSet rs = st.executeQuery(checkUser);
         int UserID = 0;
-        //if the resullt set is empty then the user doesnt exist and return -1
-        if(rs.next()){
+        //if the result set is empty then the user doesnt exist in the database and thus return -1
+        if(!rs.next()){
+            return -1;
+        }
+        // else the user is in the database and we get their userId
+        else{
             UserID = rs.getInt("UserId");
             rs.close();
             st.close();
             db.commit();
         }
-        else{
-            return -1;
-        }
-        // this means that the corresponding user exists in the database
         
-            // check if the submission id is not -1 and if no, then insert submission as normal
+        // we now know the user exists in the database and have their user id
         int subID = submission.id;
-        if (submission.id != -1){
-            String InsertSub = "INSERT INTO Submission (SubmissionId, UserId, ExerciseId, SubmissionTime) VALUES("+submission.id+","+ UserID +", "+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
-            Statement stmt1 = db.createStatement();
-            stmt1.executeUpdate(InsertSub);
-            stmt1.close();
-            db.commit();
-            return subID;
-        }
-        else{ // this means the submission id == -1 and therefore insert without id field
+        // sql queries to insert with and without the submission id
+        String InsertSubNoId = "INSERT INTO Submission (UserId, ExerciseId, SubmissionTime) VALUES("+UserID+","+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
+        String InsertSub = "INSERT INTO Submission (SubmissionId, UserId, ExerciseId, SubmissionTime) VALUES("+submission.id+","+ UserID +", "+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
+        if (subID == -1){
+            //if the submission id is -1 then insert submission WITHOUT the submission id, ignore it
             Statement stmt2 = db.createStatement();
-            String InsertSubNoId = "INSERT INTO Submission (UserId, ExerciseId, SubmissionTime) VALUES("+UserID+","+submission.exercise.id+", "+submission.submissionTime.getTime()+");";
             stmt2.executeUpdate(InsertSubNoId);
-            stmt2.close();
-            Statement stmt3 = db.createStatement();
-            ResultSet getsubId = stmt3.executeQuery(GetUserId);
+            // get their submission id into a result set 
+            ResultSet getsubId = stmt2.executeQuery(GetSubId);
             if(getsubId.next()){
                 subID = getsubId.getInt("SubmissionId");
             }
-            stmt3.close();
+            // close all statements and result sets that were opened and return the submission id that was retrieved
+            stmt2.close();
             getsubId.close();
             db.commit();
             return subID;
-
+        }
+        else{ // this means the submission id is not -1 and therefore insert WITH the submissionid field
+            Statement stmt1 = db.createStatement();
+            stmt1.executeUpdate(InsertSub);
+            stmt1.close();
+            // commit the change and return the normal submission id since we have it and it != -1
+            db.commit();      
+            return subID;
         } 
     }
 
