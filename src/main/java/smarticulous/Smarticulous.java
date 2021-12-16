@@ -288,22 +288,28 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
 
 
     public <MyType> List<Exercise> loadExercises() throws SQLException {
-
+        // create array list of exercises to return
         List<Exercise> returnList = new ArrayList<>();
+        ArrayList<Question> questions = new ArrayList<>();
         Statement st = db.createStatement();
-        String GetExercises = "SELECT *, COUNT(QuestionId) FROM Exercise INNER JOIN Question ON " + "Exercise.ExerciseId = Question.ExerciseId GROUP BY Question.ExerciseId ORDER BY Exercise.ExerciseId ASC;";
-        String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId ASC;";
+        // select queries to get all the exercises from Exercise and to get the questions from the exercise
+        String GetQuestions = "SELECT * FROM Question INNER JOIN Exercise ON " + "Exercise.ExerciseId = Question.ExerciseId ORDER BY Exercise.ExerciseId, QuestionId;";
+        String GetExercises = "SELECT *, COUNT(QuestionId) FROM Exercise INNER JOIN Question ON " + "Exercise.ExerciseId = Question.ExerciseId GROUP BY Question.ExerciseId ORDER BY Exercise.ExerciseId;";
+        // execute the queries to get the exercises and the questions
         ResultSet es = st.executeQuery(GetExercises);
         ResultSet qs = st.executeQuery(GetQuestions);
         int numEx = 0;
-        while(qs.next()){
-            qs.getInt("QuestionId");
-            numEx++;
-        }
+        st.close();
+        // create while loop to iterate through all the exercises
         while(es.next()){
             Statement stmt = db.createStatement();
+            // create new exercise using the current exercises exid, name and date
             Exercise current = new Exercise(es.getInt("ExerciseId"), es.getString("Name"), new Date(es.getInt("DueDate")));
             int cur = 0;
+            String command = "COUNT(QuestionId)";
+            // assign numEx to be the number of questions in the exercise
+            numEx = es.getInt(command);
+            // create a for loop to iterate through the questions array in the exercise and add each one to the current exercise
             for(cur = 0; cur < numEx; cur++){
                 qs.next();
                 current.addQuestion(qs.getString("Name"), qs.getString("Desc"), qs.getInt("Points"));
