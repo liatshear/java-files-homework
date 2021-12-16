@@ -406,20 +406,14 @@ public class Smarticulous<SQLiteDatabase, Cursor> {
      * @return
      */
     PreparedStatement getLastSubmissionGradesStatement() throws SQLException {
-        /**Statement st = db.createStatement();
-        String query= SELECT Question
-         FROM Exercise USING (ExerciseId)
-               Submission Using (SubmissionId)
-               User USING (UserId)
-
-        String LatestSub = "SELECT 1 FROM Submission ORDER BY SubmissionTime DESC;";
-        String getEx = "SELECT Exercise FROM Submission;";
-        String getExid = "SELECT ExerciseId FROM EXERCISE;";
-        String getUser = "SELECT"
-        String getQs = "SELECT * FROM Question WHERE ExerciseId = "+exercise.id+""
-        ORDER BY QuestionId";
-        PreparedStatement pt = db.prepareStatement(query);
-        pt.executeQuery();*/
+        Statement st = db.createStatement();
+        String query= "SELECT Question" +
+               " FROM Exercise USING (ExerciseId)" +
+               " Submission Using (SubmissionId)" +
+               " User USING (Username)LIMIT 1" +
+               "SORT BY QuestionID ASC" +
+               "GROUP BY SubmissionID, QuestionId, Grade, SubmissionTime";
+        st.close();
         return null;
     }
 
